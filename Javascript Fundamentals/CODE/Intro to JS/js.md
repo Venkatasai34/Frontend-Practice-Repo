@@ -1,88 +1,95 @@
 
-# 🧠 JavaScript: Hoisting & Scoping Deep Dive
+# 🧠 JavaScript Hoisting & Scope – Quick Guide
 
-## 🔄 Hoisting
+## 📘 Index
+1. [Hoisting Basics](#1-hoisting-basics)
+2. [Function vs. Variable Hoisting](#2-function-vs-variable-hoisting)
+3. [Scope & Execution Context](#3-scope--execution-context)
+4. [Global vs. Function Scope](#4-global-vs-function-scope)
+5. [undefined vs. not defined](#5-undefined-vs-not-defined)
+6. [Let & Const: Temporal Dead Zone](#6-let--const-temporal-dead-zone)
+7. [Comparison Table](#7-comparison-table)
+8. [Best Practices](#8-best-practices)
 
-**Hoisting** is JavaScript’s default behavior of moving declarations to the top of the current scope (script or function).  
-- `var` declarations are hoisted and initialized with `undefined`.
-- `function` declarations are hoisted with their entire body.
-- `let` and `const` are hoisted but stay in the **Temporal Dead Zone** until they are initialized.
+---
 
-### 📌 Example 1: Function Hoisting
+## 1. 🏗 Hoisting Basics
+
+**Hoisting** is JavaScript's default behavior of moving declarations to the top of the scope (during memory phase).
 
 ```js
-console.log(getName); // Logs the full function
-console.log(x);       // undefined
+console.log(x); // undefined
+var x = 7;
+```
 
+🔹 JS allocates memory for `var x` and sets it to `undefined` before code execution.
+
+---
+
+## 2. 🔁 Function vs. Variable Hoisting
+
+```js
+console.log(getName); // [Function: getName]
 getName();            // Hello
+console.log(x);       // undefined
 
 var x = 7;
 function getName() {
-    console.log("Hello");
+  console.log("Hello");
 }
 ```
 
-### 📌 Example 2: Reference Error
+| Type     | Hoisted | Initialization | Access Before Init |
+|----------|---------|----------------|---------------------|
+| `var`    | ✅ Yes  | `undefined`    | ✅ Allowed (logs `undefined`) |
+| Function | ✅ Yes  | Full Body       | ✅ Allowed           |
 
-```js
-console.log(a); // ❌ ReferenceError: a is not defined
-```
+---
 
-## 🌐 Execution Contexts & Scope
+## 3. ⚙️ Scope & Execution Context
 
-Each time a function is invoked, a new **Execution Context** is created.
-
-### 📌 Example
+Every function call creates a new **Execution Context** with its own **Lexical Environment**.
 
 ```js
 var x = 1;
 
-a(); // Logs 10
-b(); // Logs 100
-
-console.log(x); // Logs 1
-
 function a() {
-    var x = 10;
-    console.log(x);
+  var x = 10;
+  console.log(x); // 10
 }
 
 function b() {
-    var x = 100;
-    console.log(x);
+  var x = 100;
+  console.log(x); // 100
 }
+
+a(); // 10
+b(); // 100
+console.log(x); // 1
 ```
 
-### 🔍 Breakdown:
-- Global `x` is `1`
-- Inside `a()`, `x` is `10`
-- Inside `b()`, `x` is `100`
+📌 Local variables shadow global ones. Each function has its own `x`.
 
-## 🌍 Global vs Function Scope
+---
+
+## 4. 🌍 Global vs. Function Scope
 
 ```js
 var a = 10;
-
-function b() {
-    var x = 10;
+function test() {
+  var x = 20;
 }
-
-b();
-
-console.log(window.a); // 10 (in browser)
-console.log(a);        // 10
+console.log(window.a); // 10
 console.log(this.a);   // 10
+console.log(a);        // 10
+console.log(x);        // ❌ ReferenceError
 ```
 
-### ❌ Reference Error
+🔹 `var` in global scope becomes a property of the global object (`window` in browsers).
 
-```js
-console.log(x); // ❌ ReferenceError: x is not defined
-```
+---
 
-## 🆚 Undefined vs Not Defined
-
-### ✅ `undefined`
+## 5. ❓ `undefined` vs. `not defined`
 
 ```js
 var a;
@@ -91,84 +98,56 @@ console.log(a); // undefined
 a = 10;
 console.log(a); // 10
 
-a = "hello world";
-console.log(a); // "hello world"
+console.log(b); // ❌ ReferenceError: b is not defined
 ```
 
-> ❗ Never do `a = undefined` — it’s bad practice.
+| Case                 | Declared | Assigned | Result         |
+|----------------------|----------|----------|----------------|
+| `var a;`             | ✅       | ❌       | `undefined`    |
+| `let b;`             | ✅       | ❌       | `undefined`    |
+| `const c;`           | ✅       | ❌       | ❌ SyntaxError |
+| `console.log(x);`    | ❌       | ❌       | ❌ ReferenceError |
 
-### Better Check:
-```js
-if (typeof a === "undefined") {
-    // Safe check
-}
-```
+---
 
-### ❌ `not defined`
-
-```js
-console.log(c); // ❌ ReferenceError: c is not defined
-```
-
-| Case                       | Declared | Assigned | Access Result     |
-|---------------------------|----------|----------|-------------------|
-| `var a;`                  | ✅       | ❌       | `undefined`       |
-| `let b;`                  | ✅       | ❌       | `undefined`       |
-| `const c;`                | ✅       | ❌       | ❌ SyntaxError     |
-| `var x = undefined;`      | ✅       | ✅       | `undefined`       |
-| `console.log(notDeclared)`| ❌       | ❌       | ❌ ReferenceError  |
-
-## ⏳ Temporal Dead Zone (TDZ)
+## 6. ⚠️ Let & Const: Temporal Dead Zone
 
 ```js
 console.log(a); // ❌ ReferenceError
 console.log(b); // undefined
-console.log(y); // ❌ ReferenceError
 
 let a = 10;
-var b = 100;
+var b = 20;
 ```
 
-> `let` and `const` live in TDZ until they are initialized.
+- **Temporal Dead Zone (TDZ):** Time between hoisting and initialization for `let`/`const`.
+- Variables in TDZ throw ReferenceError if accessed.
 
-## ♻️ Redeclaration & Reassignment
+---
 
-### ✅ `var` allows both:
+## 7. 📊 Comparison Table
+
+| Feature              | `var`      | `let`       | `const`     |
+|----------------------|------------|-------------|-------------|
+| Scope                | Function   | Block       | Block       |
+| Hoisted              | ✅ Yes     | ✅ Yes       | ✅ Yes       |
+| Init in TDZ          | ✅ Yes     | ❌ No        | ❌ No        |
+| Redeclaration        | ✅ Allowed | ❌ Error     | ❌ Error     |
+| Reassignment         | ✅ Yes     | ✅ Yes       | ❌ No        |
+| Global Object Bind   | ✅ Yes     | ❌ No        | ❌ No        |
+
+---
+
+## 8. ✅ Best Practices
+
+- 🧼 Always declare variables at the top of their scope.
+- ❌ Avoid using `var`, prefer `let` and `const`.
+- 🔒 Use `const` for values that shouldn’t change.
+- ⚠️ Never assign `undefined` manually (`a = undefined` is bad practice).
+- 🛡 Check undeclared variables using `typeof`:
+
 ```js
-var z = 100;
-var z = 200;
+if (typeof a === "undefined") {
+  // Safe check
+}
 ```
-
-### ❌ `let` can't be redeclared:
-```js
-let h = 10;
-// let h = 20; ❌ SyntaxError
-```
-
-### ❌ `const` can't be reassigned or uninitialized:
-```js
-const k = 10;
-k = 100; // ❌ TypeError
-
-// const c; ❌ SyntaxError: Must be initialized
-```
-
-### ✅ `let` reassignment:
-
-```js
-let p = 30;
-p = 40;
-console.log(p); // 40
-
-let q;
-q = 50;
-console.log(q); // 50
-```
-
-## 📌 Summary
-
-- `var` is **function-scoped** and hoisted with `undefined`.
-- `let` and `const` are **block-scoped**, hoisted but not initialized (TDZ).
-- Functions are hoisted with body intact.
-- Accessing undeclared variables causes **ReferenceError**.
-- `this === window` is `true` in global scope (browser).
